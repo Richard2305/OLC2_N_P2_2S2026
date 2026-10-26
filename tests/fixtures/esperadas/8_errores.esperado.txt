@@ -1,0 +1,47 @@
+## ERRORES
+[Error Léxico] Línea 25, Columna 17
+Carácter no reconocido '@'.
+
+[Error Semántico] Línea 29, Columna 20
+La variable 'no_declarada' no ha sido declarada.
+
+[Error Semántico] Línea 33, Columna 21
+No es posible asignar un valor de tipo String a una variable de tipo i32.
+
+[Error Semántico] Línea 35, Columna 15
+Tipos incompatibles. No es posible utilizar un valor de tipo String
+donde se esperaba un valor de tipo i32.
+
+[Error Semántico] Línea 40, Columna 5
+No es posible modificar la variable 'contador' porque fue declarada
+como inmutable.
+
+[Error Semántico] Línea 45, Columna 20
+Índice fuera de los límites del arreglo.
+
+[Error Semántico] Línea 49, Columna 5
+La función 'saludar' no ha sido declarada.
+
+[Error Semántico] Línea 53, Columna 5
+La función 'suma' esperaba 2 argumentos, pero recibió 1.
+
+[Error Sintáctico] Línea 57, Columna 15
+Se esperaba ';'.
+
+[Error Léxico] Línea 64, Columna 5
+Comentario de bloque sin cerrar.
+
+[Error Sintáctico] Línea 61, Columna 21
+Se esperaba '}'. (en cascada: el comentario absorbió la llave de main; el enunciado no define la posición)
+
+## SALIDA ESTANDAR
+inicio
+control 1
+control 2
+control 3
+control 4
+control 5
+control 6
+control 7
+control 8
+fin

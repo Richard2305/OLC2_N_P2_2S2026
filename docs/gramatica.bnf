@@ -1,0 +1,104 @@
+# Gramática efectiva de OxigenNative
+# Generada a partir de las producciones PLY; <empty> denota epsilon.
+# Los terminales se describen en compiler/lexer.py.
+
+program -> functions
+functions -> functions function
+functions -> empty
+function -> FN ID ( parameters ) result_type block
+parameters -> parameter_list
+parameters -> empty
+parameter_list -> parameter_list , parameter
+parameter_list -> parameter
+parameter -> ID : type
+result_type -> ARROW type
+result_type -> empty
+type -> I32
+type -> F64
+type -> BOOL
+type -> CHAR_TYPE
+type -> STRING_TYPE
+type -> [ type ; INTEGER ]
+block -> { statements }
+statement -> error ;
+statements -> statements statement
+statements -> empty
+statement -> declaration ;
+statement -> expression ;
+statement -> assignment ;
+statement -> if_statement
+statement -> while_statement
+statement -> loop_statement
+statement -> match_statement
+statement -> block
+declaration -> LET mutable ID annotation initializer
+mutable -> MUT
+mutable -> empty
+annotation -> : type
+annotation -> empty
+initializer -> = expression
+initializer -> empty
+assignment -> expression = expression
+assignment -> expression ADDASSIGN expression
+assignment -> expression SUBASSIGN expression
+assignment -> expression MULASSIGN expression
+assignment -> expression DIVASSIGN expression
+assignment -> expression MODASSIGN expression
+statement -> RETURN optional_expression ;
+statement -> BREAK optional_label ;
+statement -> CONTINUE optional_label ;
+optional_expression -> expression
+optional_expression -> empty
+optional_label -> LABEL
+optional_label -> empty
+if_statement -> IF expression block else_clause
+else_clause -> ELSE block
+else_clause -> ELSE if_statement
+else_clause -> empty
+while_statement -> WHILE expression block
+loop_statement -> LOOP block
+loop_statement -> LABEL : LOOP block
+match_statement -> MATCH expression { arms }
+arms -> arms arm
+arms -> empty
+arm -> expression FATARROW expression ,
+arm -> expression FATARROW block ,
+arm -> expression FATARROW block
+expression -> expression + expression
+expression -> expression - expression
+expression -> expression * expression
+expression -> expression / expression
+expression -> expression % expression
+expression -> expression EQ expression
+expression -> expression NE expression
+expression -> expression < expression
+expression -> expression > expression
+expression -> expression LE expression
+expression -> expression GE expression
+expression -> expression AND expression
+expression -> expression OR expression
+expression -> - expression
+expression -> ! expression
+expression -> & expression
+expression -> ( expression )
+expression -> INTEGER
+expression -> FLOAT
+expression -> STRING
+expression -> CHAR
+expression -> TRUE
+expression -> FALSE
+expression -> NONE
+expression -> ID
+expression -> STRING_TYPE PATH ID
+expression -> expression ( arguments )
+expression -> expression ! ( arguments )
+expression -> expression . ID ( arguments )
+expression -> expression [ expression ]
+expression -> expression [ expression RANGE expression ]
+expression -> [ arguments ]
+expression -> [ expression ; expression ]
+arguments -> argument_list
+arguments -> empty
+argument_list -> argument_list , expression
+argument_list -> expression
+empty -> <empty>

@@ -1,0 +1,6 @@
+inicio de main
+Hola desde saludar
+sumar: 5
+cuadrado: 25
+true
+false

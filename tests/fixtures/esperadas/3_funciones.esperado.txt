@@ -1,0 +1,60 @@
+inicio
+Hola desde greet
+medio
+Hola desde greet
+fin
+1
+---
+1
+1
+---
+1
+2
+1
+---
+1
+3
+3
+1
+---
+1
+4
+6
+4
+1
+---
+Mensaje: Hola
+Mensaje: Compiladores
+1! = 1
+2! = 2
+3! = 6
+4! = 24
+5! = 120
+1! = 1
+true
+true
+true
+true
+false
+0
+1
+1
+5
+55
+610
+true
+true
+true
+true
+Hanoi con 2 discos
+Mover disco 1 de A a B
+Mover disco 2 de A a C
+Mover disco 1 de B a C
+Hanoi con 3 discos
+Mover disco 1 de A a C
+Mover disco 2 de A a B
+Mover disco 1 de C a B
+Mover disco 3 de A a C
+Mover disco 1 de B a A
+Mover disco 2 de B a C
+Mover disco 1 de A a C

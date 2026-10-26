@@ -1,0 +1,144 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f2ee">
+  <meta name="description" content="Escribe, compila y ejecuta OxigenNative. Inspecciona el código ARM64, la salida y los reportes del compilador.">
+  <title>OxigenNative · Editor</title>
+  <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+  <link rel="preload" href="{% static 'fonts/ibm-plex-sans-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/ibm-plex-mono-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'editor.css' %}">
+  <script src="{% static 'editor.js' %}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#source">Ir al editor</a>
+  <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="i-new" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8zM14 3v6h5M9 15h6M12 12v6"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7V5h7l2 3h9v12H3V7zm0 4h18"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M4 3h14l3 3v15H3V3h1zm3 0v6h10V3M7 21v-8h10v8"/></symbol>
+    <symbol id="i-run" viewBox="0 0 24 24"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-9.5z"/></symbol>
+    <symbol id="i-compile" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-report" viewBox="0 0 24 24"><path d="M5 3h14v18H5zm3 5h8m-8 4h8m-8 4h5"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 1 1 4 3v3m0 3v1"/></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24"><path d="M9 3h6v5H9zm-6 13h6v5H3zm12 0h6v5h-6zM12 8v4m-6 4v-4h12v4"/></symbol>
+  </defs></svg>
+
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="OxigenNative, inicio">
+      <span class="element-tile" aria-hidden="true"><span class="element-number">8</span><span class="element-symbol">O<sub>2</sub></span><span class="element-mass">15.999</span></span>
+      <span class="brand-text"><span class="brand-name">Oxigen<span>Native</span></span><span class="brand-tagline">de código fuente a ARM64</span></span>
+    </a>
+    <ol id="pipeline" class="pipeline" aria-hidden="true">
+      <li data-step="source"><span>Fuente</span></li>
+      <li data-step="lexer"><span>Léxico</span></li>
+      <li data-step="parser"><span>Sintaxis</span></li>
+      <li data-step="semantic"><span>Semántica</span></li>
+      <li data-step="codegen"><span>ARM64</span></li>
+      <li data-step="qemu"><span>QEMU</span></li>
+    </ol>
+    <div class="header-end">
+      <span class="environment"><span class="status-dot"></span>local · aarch64</span>
+      <button id="help-button" class="icon-button" type="button" aria-label="Ayuda y atajos" title="Ayuda y atajos"><svg><use href="#i-help"/></svg></button>
+    </div>
+  </header>
+
+  <main class="workbench">
+    <div class="toolbar" aria-label="Acciones del archivo">
+      <div class="file-actions">
+        <button id="new-button" type="button"><svg><use href="#i-new"/></svg>Nuevo</button>
+        <button id="open-button" type="button" title="Abrir archivo (Ctrl+O)"><svg><use href="#i-open"/></svg>Abrir</button>
+        <button id="save-button" type="button" title="Guardar archivo (Ctrl+S)"><svg><use href="#i-save"/></svg>Guardar</button>
+        <input id="file-input" type="file" accept=".ox,.txt,text/plain" hidden aria-label="Seleccionar archivo de código">
+      </div>
+      <div class="execution-actions">
+        <button id="reports-button" type="button"><svg><use href="#i-report"/></svg>Reportes</button>
+        <button id="compile-button" class="compile-button" type="button"><svg><use href="#i-compile"/></svg>Compilar</button>
+        <button id="run-button" class="primary-button" type="button" title="Ejecutar (Ctrl+Enter)"><svg><use href="#i-run"/></svg>Ejecutar<span class="shortcut">Ctrl ↵</span></button>
+      </div>
+    </div>
+
+    <div class="workspace-layout">
+      <aside class="examples-sidebar" aria-label="Archivos de ejemplo">
+        <div class="sidebar-heading"><h2>Muestras</h2><span>.ox</span></div>
+        <nav class="examples-list" aria-label="Cargar un ejemplo">
+          {% for example in examples %}<button class="example-button{% if forloop.first %} selected{% endif %}" type="button" data-example="{{ forloop.counter0 }}" title="{{ example.description }}"{% if forloop.first %} aria-current="true"{% endif %}><span class="example-index">{{ forloop.counter|stringformat:"02d" }}</span><span>{{ example.name }}<small>{{ example.description }}</small></span></button>{% endfor %}
+        </nav>
+        <dl class="spec-card">
+          <div><dt>Destino</dt><dd>AArch64</dd></div>
+          <div><dt>Entorno</dt><dd>QEMU user</dd></div>
+          <div><dt>Fuente</dt><dd>≤ 64 KiB</dd></div>
+          <div><dt>Proceso</dt><dd>≤ 5 s</dd></div>
+        </dl>
+        <button class="sidebar-help" id="shortcuts-button" type="button">Atajos de teclado</button>
+      </aside>
+
+      <div class="main-workspace">
+        <div class="code-panels">
+          <section class="panel source-panel" aria-labelledby="source-heading">
+            <header class="panel-header"><div class="panel-heading"><span class="stage-index">01</span><h1 id="source-heading">Código fuente</h1></div><span class="language-label">OxigenNative</span></header>
+            <div class="file-tab"><input id="file-name" aria-label="Nombre del archivo" value="inicio.ox" maxlength="100" spellcheck="false"><span id="dirty-indicator" class="dirty-indicator" title="Cambios sin guardar" hidden></span><span id="draft-state">Borrador local</span></div>
+            <div class="editor-shell">
+              <div id="line-numbers" class="line-numbers" aria-hidden="true"></div>
+              <div class="editor-surface"><pre id="source-highlight" class="source-highlight" aria-hidden="true"></pre><textarea id="source" aria-label="Código fuente OxigenNative" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-describedby="editor-hint">{{ initial_source }}</textarea></div>
+            </div>
+            <footer class="editor-footer"><span id="cursor-position">Línea 1, columna 1</span><span><span id="source-size">0 B</span><span class="footer-divider"></span>UTF-8</span></footer>
+          </section>
+
+          <section class="panel assembly-panel" aria-labelledby="assembly-heading">
+            <header class="panel-header"><div class="panel-heading"><span class="stage-index">02</span><h2 id="assembly-heading">Ensamblador</h2><span class="language-label">ARM64</span></div><button id="download-assembly" class="icon-button" type="button" aria-label="Descargar ensamblador ARM64" title="Descargar .s" disabled><svg><use href="#i-download"/></svg></button></header>
+            <div id="assembly-empty" class="empty-state assembly-empty">
+              <span class="molecule" aria-hidden="true"><span></span><span></span></span>
+              <h3>Esperando ignición</h3>
+              <p>Compila un programa para explorar las instrucciones ARM64 que genera.</p>
+              <span class="empty-flow">fuente <span>→</span> AST <span>→</span> ARM64 <span>→</span> QEMU</span>
+            </div>
+            <pre id="assembly-code" class="assembly-code" tabindex="0" aria-label="Código ARM64 generado" hidden></pre>
+            <footer class="editor-footer"><span id="assembly-state">Sin compilar</span><span id="assembly-lines">0 líneas</span></footer>
+          </section>
+        </div>
+
+        <section class="panel console-panel" aria-labelledby="console-heading">
+          <header class="panel-header"><div class="panel-heading"><span class="stage-index">03</span><h2 id="console-heading">Consola de salida</h2><span id="exit-code" class="exit-badge" hidden></span></div><button id="clear-console" class="text-button" type="button">Limpiar</button></header>
+          <div class="console-body" tabindex="0" aria-label="Salida del programa"><span id="console-command" class="console-prompt" aria-hidden="true">qemu-aarch64 ./inicio</span><p id="console-placeholder" class="console-placeholder">La salida de tu programa aparecerá aquí.</p><pre id="stdout" class="stdout" hidden></pre><pre id="stderr" class="stderr" hidden></pre></div>
+          <div class="console-meta"><span id="console-state">Listo para ejecutar</span><span id="elapsed-time">—</span></div>
+        </section>
+
+        <section id="reports-section" class="panel reports-panel" aria-labelledby="reports-heading">
+          <header class="reports-header"><div class="panel-heading"><span class="stage-index">04</span><h2 id="reports-heading">Reportes</h2></div><span id="result-version" class="subtle-label">Sin resultados</span></header>
+          <div class="report-tabs" role="tablist" aria-label="Reportes de compilación">
+            <button id="tab-errors" type="button" role="tab" aria-selected="true" aria-controls="panel-errors" tabindex="0">Errores<span id="error-count" class="count">0</span></button>
+            <button id="tab-symbols" type="button" role="tab" aria-selected="false" aria-controls="panel-symbols" tabindex="-1">Tabla de símbolos<span id="symbol-count" class="count">0</span></button>
+            <button id="tab-ast" type="button" role="tab" aria-selected="false" aria-controls="panel-ast" tabindex="-1"><svg><use href="#i-tree"/></svg>AST</button>
+          </div>
+          <div id="panel-errors" class="report-content" role="tabpanel" aria-labelledby="tab-errors" tabindex="0">
+            <div class="report-actions"><span id="errors-description">Compila para revisar el análisis del programa.</span><button id="download-errors" class="text-button" type="button" disabled><svg><use href="#i-download"/></svg>Exportar HTML</button></div>
+            <div id="errors-empty" class="report-empty"><span class="empty-check">✓</span><p>Aún no hay un análisis.</p></div>
+            <div id="errors-table-wrap" class="table-scroll" hidden><table><caption class="sr-only">Errores del programa</caption><thead><tr><th scope="col">Tipo</th><th scope="col">Descripción</th><th scope="col">Ubicación</th></tr></thead><tbody id="errors-body"></tbody></table></div>
+          </div>
+          <div id="panel-symbols" class="report-content" role="tabpanel" aria-labelledby="tab-symbols" tabindex="0" hidden>
+            <div class="report-actions"><span>Declaraciones y parámetros del programa.</span><button id="download-symbols" class="text-button" type="button" disabled><svg><use href="#i-download"/></svg>Exportar HTML</button></div>
+            <p id="symbols-empty" class="report-empty">Compila para explorar la tabla de símbolos.</p>
+            <div id="symbols-table-wrap" class="table-scroll" hidden><table><caption class="sr-only">Tabla de símbolos</caption><thead><tr><th scope="col">Identificador</th><th scope="col">Categoría</th><th scope="col">Tipo</th><th scope="col">Ámbito</th><th scope="col">Línea</th><th scope="col">Mutable</th><th scope="col">Valor inicial</th></tr></thead><tbody id="symbols-body"></tbody></table></div>
+            <p class="report-footnote">Los valores iniciales literales no son el estado final de QEMU. «—» indica un valor calculado o no disponible.</p>
+          </div>
+          <div id="panel-ast" class="report-content" role="tabpanel" aria-labelledby="tab-ast" tabindex="0" hidden>
+            <div class="report-actions ast-actions"><span>Árbol de sintaxis abstracta</span><div><button id="ast-zoom-out" class="text-button" type="button" aria-label="Alejar AST" disabled>−</button><button id="ast-fit" class="text-button" type="button" disabled>Ajustar</button><button id="ast-zoom-in" class="text-button" type="button" aria-label="Acercar AST" disabled>+</button><button id="download-svg" class="text-button" type="button" disabled>SVG</button><button id="download-dot" class="text-button" type="button" disabled>DOT</button></div></div>
+            <p id="ast-empty" class="report-empty">Compila para visualizar la estructura del programa.</p>
+            <div id="ast-viewport" class="ast-viewport" tabindex="0" aria-label="Árbol AST; usa los controles para ajustar el zoom" hidden><img id="ast-image" alt="Árbol de sintaxis abstracta generado con Graphviz"></div>
+            <details id="ast-structure" hidden><summary>Ver estructura del AST como texto</summary><pre id="ast-json" tabindex="0"></pre></details>
+          </div>
+        </section>
+      </div>
+    </div>
+    <footer class="statusbar"><span id="app-status" role="status" aria-live="polite"><span class="status-dot"></span><span id="status-text">Listo para compilar</span></span><span id="editor-hint">Ctrl+Enter para ejecutar<span class="footer-divider"></span>4 espacios</span></footer>
+  </main>
+
+  <dialog id="discard-dialog" aria-labelledby="discard-title"><form method="dialog"><h2 id="discard-title">Tienes cambios sin guardar</h2><p>El nuevo archivo reemplazará tu borrador actual. Puedes conservarlo y guardarlo primero.</p><div class="dialog-actions"><button value="cancel" autofocus>Conservar edición</button><button value="replace" class="primary-button">Reemplazar</button></div></form></dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title"><form method="dialog"><h2 id="help-title">Tu espacio de compilación</h2><p>Escribe o abre un archivo .ox. Compilar muestra el ensamblador y los reportes; Ejecutar también ensambla, enlaza y ejecuta el programa.</p><dl class="shortcuts-list"><div><dt>Ejecutar</dt><dd><kbd>Ctrl</kbd> + <kbd>Enter</kbd></dd></div><div><dt>Guardar archivo</dt><dd><kbd>Ctrl</kbd> + <kbd>S</kbd></dd></div><div><dt>Abrir archivo</dt><dd><kbd>Ctrl</kbd> + <kbd>O</kbd></dd></div><div><dt>Indentar / quitar sangría</dt><dd><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd></dd></div></dl><p class="help-note">El borrador se conserva en este navegador. Usa Guardar para descargar tu archivo.</p><div class="dialog-actions"><button class="primary-button" autofocus>Entendido</button></div></form></dialog>
+  {{ examples|json_script:"examples-data" }}
+</body>
+</html>

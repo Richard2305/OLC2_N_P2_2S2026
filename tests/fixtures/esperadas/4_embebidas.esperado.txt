@@ -1,0 +1,35 @@
+Hola Mundo
+Hola Mundo
+Texto: Hola Mundo
+Ana tiene 20 anios
+Ana-20-true
+Suma: 25
+Hola Mundo
+[1, 2, 3]
+Arreglo: [1, 2, 3]
+i32
+f64
+bool
+char
+String
+ok
+ok
+10
+12
+3
+5
+true
+false
+true
+false
+Hola Rust
+Hola Mundo
+["Hola", "Mundo"]
+["a", "b", "c"]
+HOLA MUNDO
+ABC123
+hola mundo
+abc123
+[30, 20, 10]
+[4, 3, 2, 1]
+[1, 2, 3]
