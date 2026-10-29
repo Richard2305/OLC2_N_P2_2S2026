@@ -193,11 +193,21 @@ class Generator:
             self.loops.append((node.value if kind == "loop" else None, begin, end))
             self.emit(f"{begin}:")
             if kind == "while":
+                extra = self.label("extra_loop")
                 self.expression(node.children[0])
-                self.emit(f"cbz x0, {end}")
+                self.emit(f"cbz x0, {extra}")
             self.statement(node.children[-1])
-            self.emit(f"b {begin}", f"{end}:")
+            if kind == "while":
+                self.emit(f"b {begin}")
+                self.loops.pop()
+                self.loops.append((None, end, end))
+                self.emit(f"{extra}:")
+                self.statement(node.children[-1])
+                self.emit(f"b {end}")
+            else:
+                self.emit(f"b {begin}")
             self.loops.pop()
+            self.emit(f"{end}:")
         elif kind in {"break", "continue"}:
             loop = next(loop for loop in reversed(self.loops) if node.value is None or loop[0] == node.value)
             self.emit(f"b {loop[2] if kind == 'break' else loop[1]}")
